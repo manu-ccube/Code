@@ -1,0 +1,93 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Endpoints for the API
+  Sample SAM Template for Create User
+ 
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: nodejs10.x
+ 
+Parameters:
+  CognitoRegion:
+    Type: String
+    Default: us-east-1
+  LogLevel:
+    Type: String
+    Default: ERROR
+  AllowedOrigins:
+    Type: String
+  SecurityGroupIds:
+    Type: List<AWS::EC2::SecurityGroup::Id>
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+  LayerS3Bucket:
+    Type: String
+ 
+Resources:
+  ## ApiGateway
+  ApiGatewayRestApi:
+    Type: 'AWS::Serverless::Api'
+    Properties:
+      Name: myAPI
+      StageName: Dev
+      Cors: 
+        AllowMethods: "'GET,POST,OPTIONS'"
+        AllowHeaders: "'*'"
+        AllowOrigin: "'*'"
+      DefinitionBody:
+        swagger: "2.0"
+        info:
+          version: "1.0"
+          title: MyAPI
+        schemes:
+          - "http"
+        consumes:
+          - application/json
+        produces:
+          - application/json
+                      
+  GetInfo:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: common/GetInfo
+      Handler: index.handler
+      Runtime: nodejs10.x
+      Layers:
+        - !Ref jsCommonLayer
+      VpcConfig:
+        SecurityGroupIds: !Ref SecurityGroupIds
+        SubnetIds: !Ref SubnetIds
+      Role: !Ref Role
+      Environment:
+        Variables:
+          ALLOWED_ORIGINS: !Ref AllowedOrigins
+          LOG_LEVEL: !Ref LogLevel
+          SAM_POOLID: !Ref SamPoolID
+ 
+      Events:
+       GetInfo:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /common/getinfo
+            Method: get
+            RestApiId: !Ref ApiGatewayRestApi
+
+  # Definition for the layers we'll be using
+  # 
+  jsCommonLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: js-common
+      Description: Dependencies for Lambdas
+      ContentUri:
+        Bucket: !Ref LayerS3Bucket
+        Key: lambda/js-common/nodejs.zip
+      CompatibleRuntimes:
+        - nodejs6.10
+        - nodejs8.10
+      LicenseInfo: 'MIT'
+      RetentionPolicy: Delete
+
