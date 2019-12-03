@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'Endpoints for the API Sample SAM Template for Create User
+
+  '
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: nodejs10.x
+Parameters:
+  CognitoRegion:
+    Type: String
+    Default: us-east-1
+  LogLevel:
+    Type: String
+    Default: ERROR
+  AllowedOrigins:
+    Type: String
+  SecurityGroupIds:
+    Type: List<AWS::EC2::SecurityGroup::Id>
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+Resources:
+  ApiGatewayRestApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: myAPI
+      StageName: Dev
+      Cors:
+        AllowMethods: '''GET,POST,OPTIONS'''
+        AllowHeaders: '''*'''
+        AllowOrigin: '''*'''
+      DefinitionBody:
+        swagger: '2.0'
+        info:
+          version: '1.0'
+          title: MyAPI
+        schemes:
+        - http
+        consumes:
+        - application/json
+        produces:
+        - application/json
+  GetInfo:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: GetInfo
+      Handler: index.handler
+      Runtime: nodejs10.x
+      Layers:
+      - Ref: jsCommonLayer
+      - Ref: customLogsLayer
+      VpcConfig:
+        SecurityGroupIds:
+          Ref: SecurityGroupIds
+        SubnetIds:
+          Ref: SubnetIds
+      Role:
+        Ref: Role
+      Environment:
+        Variables:
+          ALLOWED_ORIGINS:
+            Ref: AllowedOrigins
+          LOG_LEVEL:
+            Ref: LogLevel
+          SAM_POOLID:
+            Ref: SamPoolID
+      Events:
+        GetInfo:
+          Type: Api
+          Properties:
+            Path: /common/getinfo
+            Method: get
+            RestApiId:
+              Ref: ApiGatewayRestApi
+  jsCommonLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: js-common
+      Description: Dependencies for Lambdas
+      ContentUri: ../../dependencies/js-common
+      CompatibleRuntimes:
+      - nodejs10.x
+      LicenseInfo: MIT
+      RetentionPolicy: Retain
+  customLogsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: customLogs
+      Description: Dependencies for Lambdas
+      ContentUri: ../../dependencies/cc-log
+      CompatibleRuntimes:
+      - nodejs10.x
+      LicenseInfo: MIT
+      RetentionPolicy: Retain

@@ -1,0 +1,29 @@
+{
+  "name": "cc-log",
+  "version": "1.0.0",
+  "description": "CyberCube NodeJS logging functions",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/CyberCubeAnalyticsInc/RBAC.git"
+  },
+  "keywords": [
+    "common",
+    "CyberCube"
+  ],
+  "author": "Emmanuel Thioux",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CyberCubeAnalyticsInc/RBAC/issues"
+  },
+  "homepage": "https://github.com/CyberCubeAnalyticsInc/RBAC#readme",
+  "requires": true,
+  "lockfileVersion": 1,
+  "dependencies": {
+    "redis": "^2.8.0",
+    "uuid": "^3.3.3"
+  }
+}
